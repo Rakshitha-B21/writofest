@@ -30,11 +30,12 @@ export default function AdminLoginPage() {
     try {
       const res = await adminLogin(form);
       const token = res.data?.token;
-      if (token) localStorage.setItem('admin_token', token);
+      if (!token) throw new Error('Admin login did not return a session token.');
+      localStorage.setItem('admin_token', token);
       toast.success('Welcome back, Admin!');
       navigate('/admin/dashboard');
     } catch (err) {
-      const msg = err.response?.data?.message || 'Invalid credentials.';
+      const msg = err.response?.data?.message || err.message || 'Invalid credentials.';
       toast.error(msg);
     } finally {
       setLoading(false);

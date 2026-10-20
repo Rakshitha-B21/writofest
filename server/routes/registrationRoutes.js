@@ -1,73 +1,8 @@
 
 const express = require("express");
-const mongoose = require("mongoose");
+const Registration = require("../models/Registration");
 
 const router = express.Router();
-
-// Registration Schema
-const registrationSchema = new mongoose.Schema(
-  {
-    registrationId: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-      uppercase: true,
-    },
-
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    usn: {
-      type: String,
-      required: true,
-      trim: true,
-      uppercase: true,
-    },
-
-    email: {
-      type: String,
-      required: true,
-      trim: true,
-      lowercase: true,
-    },
-
-    phone: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    institution: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    year: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    event: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-// Reuse the existing model if it already exists
-const Registration =
-  mongoose.models.Registration ||
-  mongoose.model("Registration", registrationSchema);
 
 // POST: Register for an event
 router.post("/", async (req, res) => {

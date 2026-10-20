@@ -31,7 +31,7 @@ export const getAdminMe = () => api.get('/admin/me');
 // Admin Data
 export const getAdminRegistrations = (params) =>
   api.get('/admin/registrations', { params });
-export const exportRegistrations = () =>
-  api.get('/admin/registrations/export', { responseType: 'blob' });
+export const exportRegistrations = (params) =>
+  api.get('/admin/registrations/export', { params, responseType: 'blob' });
 
 export default api;

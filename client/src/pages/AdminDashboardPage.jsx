@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   getAdminRegistrations,
@@ -25,40 +25,47 @@ export default function AdminDashboardPage() {
 
   const [registrations, setRegistrations] = useState([]);
   const [total, setTotal] = useState(0);
+  const [summaryStats, setSummaryStats] = useState({ total: 0, byEvent: {} });
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [filterEvent, setFilterEvent] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await getAdminRegistrations({
-        page,
-        limit: PAGE_SIZE,
-        search: search || undefined,
-        event: filterEvent || undefined,
-      });
-      const data = res.data?.data || res.data;
-      setRegistrations(Array.isArray(data) ? data : data?.registrations || []);
-      setTotal(res.data?.total ?? (Array.isArray(data) ? data.length : 0));
-    } catch {
-      toast.error('Failed to load registrations.');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, search, filterEvent]);
-
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    let active = true;
+
+    getAdminRegistrations({
+      page,
+      limit: PAGE_SIZE,
+      search: search || undefined,
+      event: filterEvent || undefined,
+    })
+      .then((res) => {
+        if (!active) return;
+        const data = res.data?.data;
+        setRegistrations(Array.isArray(data?.registrations) ? data.registrations : []);
+        setTotal(data?.total ?? 0);
+        setSummaryStats(data?.stats ?? { total: 0, byEvent: {} });
+      })
+      .catch(() => {
+        if (active) toast.error('Failed to load registrations.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [page, search, filterEvent, refreshKey]);
 
   const handleLogout = async () => {
     try {
       await adminLogout();
     } catch {
-      // silent
+      toast.error('Could not reach the server; your local session has ended.');
     }
     localStorage.removeItem('admin_token');
     navigate('/admin/login');
@@ -67,7 +74,10 @@ export default function AdminDashboardPage() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const res = await exportRegistrations();
+      const res = await exportRegistrations({
+        search: search || undefined,
+        event: filterEvent || undefined,
+      });
       const url = URL.createObjectURL(res.data);
       const a = document.createElement('a');
       a.href = url;
@@ -84,10 +94,10 @@ export default function AdminDashboardPage() {
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  const stats = Object.entries(EVENT_META).map(([slug, meta]) => ({
+  const eventStats = Object.entries(EVENT_META).map(([slug, meta]) => ({
     slug,
     ...meta,
-    count: registrations.filter((r) => r.event === slug).length,
+    count: summaryStats.byEvent?.[slug] || 0,
   }));
 
   return (
@@ -131,7 +141,7 @@ export default function AdminDashboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {stats.map(({ slug, icon: Icon, label, color, count }) => (
+          {eventStats.map(({ slug, icon: Icon, label, color, count }) => (
             <div
               key={slug}
               className="bg-[#1A1512] border border-[rgba(198,154,105,0.1)] rounded-sm p-4 space-y-2"
@@ -154,7 +164,7 @@ export default function AdminDashboardPage() {
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-gradient-to-r from-[rgba(198,154,105,0.15)] to-transparent" />
           <span className="text-[#C69A69] text-xs tracking-widest uppercase">
-            {total} Total Registrations
+            {summaryStats.total} Total Registrations
           </span>
           <div className="h-px flex-1 bg-gradient-to-l from-[rgba(198,154,105,0.15)] to-transparent" />
         </div>
@@ -168,15 +178,23 @@ export default function AdminDashboardPage() {
             />
             <input
               type="search"
-              placeholder="Search by name, email, or institution…"
+              placeholder="Search by student name, USN, or registration ID…"
               value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              onChange={(e) => {
+                setLoading(true);
+                setSearch(e.target.value);
+                setPage(1);
+              }}
               className="w-full bg-[#1A1512] border border-[rgba(198,154,105,0.15)] rounded-sm pl-9 pr-4 py-2.5 text-[#F6EBDD] placeholder-[#F6EBDD]/25 text-sm outline-none focus:border-[#C69A69] transition-colors"
             />
           </div>
           <select
             value={filterEvent}
-            onChange={(e) => { setFilterEvent(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setLoading(true);
+              setFilterEvent(e.target.value);
+              setPage(1);
+            }}
             className="bg-[#1A1512] border border-[rgba(198,154,105,0.15)] rounded-sm px-4 py-2.5 text-[#F6EBDD]/80 text-sm outline-none focus:border-[#C69A69] transition-colors"
           >
             <option value="">All Events</option>
@@ -187,7 +205,10 @@ export default function AdminDashboardPage() {
             ))}
           </select>
           <button
-            onClick={fetchData}
+            onClick={() => {
+              setLoading(true);
+              setRefreshKey((key) => key + 1);
+            }}
             className="flex items-center gap-2 px-4 py-2.5 border border-[rgba(198,154,105,0.2)] text-[#F6EBDD]/60 hover:text-[#C69A69] hover:border-[rgba(198,154,105,0.4)] text-sm rounded-sm transition-all duration-200"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -201,7 +222,18 @@ export default function AdminDashboardPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[rgba(198,154,105,0.1)]">
-                  {['#', 'Name', 'Email', 'Phone', 'Institution', 'Year', 'Event', 'Date'].map(
+                  {[
+                    '#',
+                    'Registration ID',
+                    'Name',
+                    'USN',
+                    'Email',
+                    'Phone',
+                    'Institution',
+                    'Year',
+                    'Event',
+                    'Date',
+                  ].map(
                     (h) => (
                       <th
                         key={h}
@@ -216,7 +248,7 @@ export default function AdminDashboardPage() {
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan={8} className="text-center py-12">
+                    <td colSpan={10} className="text-center py-12">
                       <div className="flex items-center justify-center gap-3">
                         <div className="w-5 h-5 border-2 border-[#C69A69] border-t-transparent rounded-full animate-spin" />
                         <span className="text-[#F6EBDD]/40 text-xs">Loading…</span>
@@ -226,7 +258,7 @@ export default function AdminDashboardPage() {
                 )}
                 {!loading && registrations.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="text-center py-12">
+                    <td colSpan={10} className="text-center py-12">
                       <p className="text-[#F6EBDD]/30 text-sm">No registrations found.</p>
                     </td>
                   </tr>
@@ -243,8 +275,14 @@ export default function AdminDashboardPage() {
                         <td className="px-4 py-3 text-[#F6EBDD]/30 text-xs font-mono">
                           {(page - 1) * PAGE_SIZE + idx + 1}
                         </td>
+                        <td className="px-4 py-3 text-[#C69A69] text-xs font-mono whitespace-nowrap">
+                          {reg.registrationId}
+                        </td>
                         <td className="px-4 py-3 text-[#F6EBDD] font-medium whitespace-nowrap">
                           {reg.name}
+                        </td>
+                        <td className="px-4 py-3 text-[#F6EBDD]/60 text-xs font-mono whitespace-nowrap">
+                          {reg.usn}
                         </td>
                         <td className="px-4 py-3 text-[#F6EBDD]/60 whitespace-nowrap">
                           {reg.email}
@@ -287,6 +325,9 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Pagination */}
+          <div className="px-4 py-3 border-t border-[rgba(198,154,105,0.1)] text-[#F6EBDD]/40 text-xs">
+            {total} matching registration{total === 1 ? '' : 's'}
+          </div>
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-[rgba(198,154,105,0.1)]">
               <span className="text-[#F6EBDD]/30 text-xs">
@@ -294,14 +335,20 @@ export default function AdminDashboardPage() {
               </span>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() => {
+                    setLoading(true);
+                    setPage((p) => Math.max(1, p - 1));
+                  }}
                   disabled={page === 1}
                   className="p-1.5 rounded-sm border border-[rgba(198,154,105,0.2)] text-[#F6EBDD]/50 hover:text-[#C69A69] hover:border-[rgba(198,154,105,0.4)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 >
                   <ChevronLeft size={14} />
                 </button>
                 <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => {
+                    setLoading(true);
+                    setPage((p) => Math.min(totalPages, p + 1));
+                  }}
                   disabled={page === totalPages}
                   className="p-1.5 rounded-sm border border-[rgba(198,154,105,0.2)] text-[#F6EBDD]/50 hover:text-[#C69A69] hover:border-[rgba(198,154,105,0.4)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 >

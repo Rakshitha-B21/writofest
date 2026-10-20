@@ -6,18 +6,20 @@ require("dotenv").config();
 const connectDB = require("./config/db");
 const eventRoutes = require("./routes/eventRoutes");
 const registrationRoutes = require("./routes/registrationRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
 app.use(express.json());
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
     credentials: true,
   })
 );
 app.use("/api/events", eventRoutes);
 app.use("/api/registrations", registrationRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
   res.send("Writofest 2K26 backend is running!");
