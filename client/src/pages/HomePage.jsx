@@ -6,48 +6,40 @@ import {
   ArrowRight, Star, BookMarked
 } from 'lucide-react';
 
+
 const EVENTS = [
   {
-    slug: 'writing',
+    slug: 'ink-your-script',
     icon: PenLine,
-    title: 'Writing',
-    subtitle: 'Turn your thoughts into words.',
+    title: 'Ink Your Script',
+    subtitle: 'A celebration of imagination, where words paint what eyes cannot see.',
     description:
-      'Express your deepest ideas on paper. This is your space to craft stories, poems, essays — anything your pen desires.',
+      'A creative writing competition where participants weave poems and stories inspired by images projected on the screen. Each image becomes a doorway to imagination, inviting writers to explore the unseen and transform fleeting thoughts into timeless narratives. As the Kannada saying goes, “ರವಿ ಕಾಣದ್ದನ್ನು ಕವಿ ಕಂಡ” — What the sun cannot see, the poet can. A journey through love, emotion, courage, and human connection, where every story leaves a mark.',
     color: '#873747',
     accent: '#A04558',
-  },
-  {
-    slug: 'pop-up-quiz',
-    icon: Zap,
-    title: 'Pop-Up Quiz',
-    subtitle: 'Think fast. Trust your instincts.',
-    description:
-      'A lightning-round test of literary knowledge, pop culture and quick wit. Buzzers, books and brainy battles await.',
-    color: '#C69A69',
-    accent: '#D4AE82',
   },
   {
     slug: 'open-mic',
     icon: Mic,
     title: 'Open Mic',
-    subtitle: 'Your voice deserves a stage.',
+    subtitle: 'Where Every Voice Finds Its Stage',
     description:
-      'Step into the spotlight and share your poetry, prose or spoken word. The mic is open — the floor is yours.',
-    color: '#873747',
-    accent: '#A04558',
-  },
-  {
-    slug: 'storytelling',
-    icon: BookOpen,
-    title: 'Storytelling',
-    subtitle: 'Every story opens a new world.',
-    description:
-      'Weave a tale that captivates hearts and minds. Let your narrative transport the audience to places only you can imagine.',
+      'A space where voices turn into stories, emotions transform into art, and everyone gets a chance to shine. Share poetry, storytelling, singing, stand-up comedy, or thoughts from the heart. It is not about being perfect; it is about being real. Every voice carries a story, every performance holds an emotion, and every moment creates a memory.',
     color: '#C69A69',
     accent: '#D4AE82',
   },
+  {
+    slug: 'quiz',
+    icon: Zap,
+    title: 'Quiz',
+    subtitle: 'The Art of Knowing',
+    description:
+      'Some questions test what you know, some challenge what you believe, and some make you think in new ways. Quiz is where facts meet curiosity, instincts meet intellect, and ordinary questions lead to extraordinary discoveries. Every clue matters, every second counts, and the smallest detail can make the biggest difference. Sharpen your mind, trust your instincts, and remember — the answer might be closer than you think, but the question is never as simple as it seems.',
+    color: '#873747',
+    accent: '#A04558',
+  },
 ];
+
 
 /* ── Decorative SVG Quill ── */
 function QuillSVG() {
@@ -289,7 +281,7 @@ function EventsSection() {
         <div className="text-center mb-16 space-y-4">
           <div className="section-divider">
             <span className="text-[#C69A69] text-xs tracking-widest uppercase font-medium px-4">
-              Four Stages of Expression
+              Three Ways to Express Yourself
             </span>
           </div>
           <h2
@@ -303,7 +295,7 @@ function EventsSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {EVENTS.map((event) => {
             const Icon = event.icon;
             return (
@@ -507,7 +499,7 @@ function CTABanner() {
           Ready to write your story?
         </h2>
         <p className="text-[#F6EBDD]/70 text-lg max-w-lg mx-auto">
-          Secure your spot at Writofest 2K26. Registration is open for all four events.
+          Secure your spot at Writofest 2K26. Explore our events and let your creativity shine.
         </p>
         <button
           onClick={() => navigate('/register')}
