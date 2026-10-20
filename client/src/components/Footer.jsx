@@ -1,24 +1,21 @@
-import { Globe, Share2, ExternalLink, Feather } from 'lucide-react';
+import { Globe, Share2, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const SOCIAL_LINKS = [
   {
     icon: Globe,
     label: 'Instagram',
-    href: 'https://instagram.com/scriptink_official', // TODO: Replace with real URL
-    placeholder: true,
+    href: 'https://www.instagram.com/scriptink_official?mdxt=MTB4cmx1NDhiM280Zg==',
   },
   {
     icon: Share2,
     label: 'YouTube',
-    href: 'https://youtube.com/@scriptink', // TODO: Replace with real URL
-    placeholder: true,
+    href: 'https://youtube.com/@scriptinkofficial?si=B-0YLH5Jqz9UkKPA',
   },
   {
     icon: ExternalLink,
     label: 'LinkedIn',
-    href: 'https://linkedin.com/company/scriptink', // TODO: Replace with real URL
-    placeholder: true,
+    href: 'https://www.linkedin.com/company/scriptink-official/',
   },
 ];
 
@@ -33,7 +30,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Feather size={18} className="text-[#C69A69]" />
+              <img
+                src="/scriptink-logo.jpeg"
+                alt="ScriptInk logo"
+                className="h-10 w-10 object-contain"
+              />
               <span
                 className="text-2xl text-[#F6EBDD]"
                 style={{ fontFamily: "'Dancing Script', cursive" }}
@@ -41,6 +42,7 @@ export default function Footer() {
                 ScriptInk
               </span>
             </div>
+
             <p className="text-[#F6EBDD]/50 text-sm leading-relaxed max-w-xs">
               A literary club that believes every voice deserves a stage and every story deserves to be told.
             </p>
@@ -48,7 +50,10 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h4 className="text-[#C69A69] text-xs font-medium tracking-widest uppercase">Quick Links</h4>
+            <h4 className="text-[#C69A69] text-xs font-medium tracking-widest uppercase">
+              Quick Links
+            </h4>
+
             <nav className="flex flex-col gap-2">
               {[
                 { label: 'Home', href: '/#home' },
@@ -69,19 +74,23 @@ export default function Footer() {
 
           {/* Social */}
           <div className="space-y-4">
-            <h4 className="text-[#C69A69] text-xs font-medium tracking-widest uppercase">Follow Us</h4>
+            <h4 className="text-[#C69A69] text-xs font-medium tracking-widest uppercase">
+              Follow Us
+            </h4>
+
             <p className="text-[#F6EBDD]/50 text-sm leading-relaxed">
               Follow ScriptInk for updates, sneak peeks and more.
             </p>
+
             <div className="flex gap-4 mt-2">
-              {SOCIAL_LINKS.map(({ icon: Icon, label, href, placeholder }) => (
+              {SOCIAL_LINKS.map(({ icon: Icon, label, href }) => (
                 <a
                   key={label}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={`${label}${placeholder ? ' (placeholder link)' : ''}`}
-                  title={placeholder ? `${label} — update with real URL` : label}
+                  aria-label={label}
+                  title={label}
                   className="w-9 h-9 flex items-center justify-center border border-[rgba(198,154,105,0.25)] text-[#F6EBDD]/50 hover:text-[#C69A69] hover:border-[#C69A69]/50 hover:bg-[#C69A69]/10 transition-all duration-300 rounded-sm"
                 >
                   <Icon size={16} />
@@ -102,6 +111,7 @@ export default function Footer() {
           >
             See you at Writofest!
           </p>
+
           <p className="text-[#F6EBDD]/30 text-xs tracking-wide mt-4">
             © {new Date().getFullYear()} ScriptInk. All rights reserved.&ensp;·&ensp;Writofest 2K26
           </p>

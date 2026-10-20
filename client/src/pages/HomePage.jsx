@@ -3,7 +3,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import {
   PenLine, Zap, Mic, BookOpen,
-  ArrowRight, Feather, Star, BookMarked
+  ArrowRight, Star, BookMarked
 } from 'lucide-react';
 
 const EVENTS = [
@@ -53,7 +53,6 @@ const EVENTS = [
 function QuillSVG() {
   return (
     <svg viewBox="0 0 200 300" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      {/* Quill feather */}
       <path
         d="M100 280 C 80 200, 20 150, 10 50 C 40 80, 60 100, 100 280Z"
         fill="rgba(198,154,105,0.15)"
@@ -66,18 +65,14 @@ function QuillSVG() {
         stroke="rgba(198,154,105,0.3)"
         strokeWidth="1"
       />
-      {/* Quill spine */}
       <line x1="100" y1="280" x2="100" y2="30" stroke="rgba(198,154,105,0.5)" strokeWidth="1.5" />
-      {/* Barbs */}
       {[80, 110, 140, 170, 200, 230].map((y, i) => (
         <g key={i}>
           <line x1="100" y1={y} x2={100 - 30 + i * 2} y2={y - 15} stroke="rgba(198,154,105,0.25)" strokeWidth="0.8" />
           <line x1="100" y1={y} x2={100 + 30 - i * 2} y2={y - 15} stroke="rgba(198,154,105,0.2)" strokeWidth="0.8" />
         </g>
       ))}
-      {/* Ink tip */}
       <path d="M95 278 Q100 295 105 278" fill="rgba(135,55,71,0.6)" />
-      {/* Ink drop */}
       <ellipse cx="100" cy="295" rx="4" ry="5" fill="rgba(135,55,71,0.4)" />
     </svg>
   );
@@ -108,9 +103,7 @@ function InkpotSVG({ className = '' }) {
       <ellipse cx="50" cy="45" rx="30" ry="10" fill="rgba(135,55,71,0.5)" stroke="rgba(135,55,71,0.6)" strokeWidth="1" />
       <ellipse cx="50" cy="78" rx="20" ry="8" fill="rgba(10,8,6,0.9)" />
       <ellipse cx="44" cy="75" rx="5" ry="2" fill="rgba(198,154,105,0.2)" transform="rotate(-20 44 75)" />
-      {/* Neck */}
       <rect x="35" y="28" width="30" height="20" rx="4" fill="rgba(135,55,71,0.4)" stroke="rgba(135,55,71,0.5)" strokeWidth="1" />
-      {/* Cap */}
       <rect x="30" y="20" width="40" height="12" rx="3" fill="rgba(135,55,71,0.6)" stroke="rgba(135,55,71,0.7)" strokeWidth="1" />
     </svg>
   );
@@ -124,7 +117,6 @@ function HeroSection() {
       id="home"
       className="relative min-h-screen flex items-center overflow-hidden bg-[#101010] pt-16"
     >
-      {/* Background paper texture */}
       <div
         className="absolute inset-0 opacity-5"
         style={{
@@ -132,7 +124,6 @@ function HeroSection() {
                             radial-gradient(circle at 80% 20%, #C69A69 0%, transparent 40%)`,
         }}
       />
-      {/* Subtle grid lines */}
       <div
         className="absolute inset-0 opacity-[0.02]"
         style={{
@@ -144,9 +135,7 @@ function HeroSection() {
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left — Text */}
           <div className="space-y-8">
-            {/* Badge */}
             <div className="animate-fade-in inline-flex items-center gap-2 px-4 py-1.5 border border-[rgba(198,154,105,0.3)] rounded-full">
               <Star size={10} className="text-[#C69A69] fill-[#C69A69]" />
               <span className="text-[#C69A69] text-xs tracking-widest uppercase font-medium">
@@ -155,7 +144,6 @@ function HeroSection() {
               <Star size={10} className="text-[#C69A69] fill-[#C69A69]" />
             </div>
 
-            {/* Main heading */}
             <div className="animate-fade-in-up animation-delay-200 space-y-2">
               <h1
                 className="leading-none"
@@ -176,7 +164,6 @@ function HeroSection() {
               </h1>
             </div>
 
-            {/* Tagline */}
             <div className="animate-fade-in-up animation-delay-400 space-y-3">
               <div className="flex items-center gap-3">
                 <div className="h-px w-8 bg-[#C69A69]" />
@@ -192,7 +179,6 @@ function HeroSection() {
               </p>
             </div>
 
-            {/* CTA */}
             <div className="animate-fade-in-up animation-delay-600 flex flex-col sm:flex-row gap-4">
               <button
                 onClick={() => navigate('/register')}
@@ -214,33 +200,23 @@ function HeroSection() {
             </div>
           </div>
 
-          {/* Right — Decorative artwork */}
           <div className="relative hidden lg:flex items-center justify-center h-96 xl:h-[520px]">
-            {/* Outer ink ring */}
             <div className="absolute inset-0 border border-[rgba(198,154,105,0.08)] rounded-full" />
-
-            {/* Large quill — center */}
             <div className="animate-float relative z-10 w-40 xl:w-52">
               <QuillSVG />
             </div>
-
-            {/* Floating book — top left */}
             <div
               className="absolute top-10 left-10 w-24 xl:w-32 animate-float"
               style={{ animationDelay: '1s', animationDuration: '8s' }}
             >
               <BookSVG />
             </div>
-
-            {/* Floating inkpot — bottom right */}
             <div
               className="absolute bottom-12 right-12 w-20 xl:w-28 animate-float"
               style={{ animationDelay: '2s', animationDuration: '7s' }}
             >
               <InkpotSVG />
             </div>
-
-            {/* Second book — bottom left */}
             <div
               className="absolute bottom-8 left-16 w-16 xl:w-20 animate-float opacity-60"
               style={{ animationDelay: '3s', animationDuration: '9s', transform: 'rotate(15deg)' }}
@@ -248,7 +224,6 @@ function HeroSection() {
               <BookSVG />
             </div>
 
-            {/* Scattered ink dots */}
             {[
               { size: 3, top: '25%', left: '15%', delay: '0.5s' },
               { size: 2, top: '65%', left: '75%', delay: '1.5s' },
@@ -269,7 +244,6 @@ function HeroSection() {
               />
             ))}
 
-            {/* Corner ornament text */}
             <div
               className="absolute top-6 right-6 text-[#C69A69]/30 text-5xl rotate-12"
               style={{ fontFamily: "'Dancing Script', cursive" }}
@@ -286,7 +260,6 @@ function HeroSection() {
         </div>
       </div>
 
-      {/* Scroll indicator */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce opacity-50">
         <div className="w-px h-8 bg-gradient-to-b from-[#C69A69] to-transparent" />
       </div>
@@ -313,7 +286,6 @@ function EventsSection() {
       />
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
-        {/* Section header */}
         <div className="text-center mb-16 space-y-4">
           <div className="section-divider">
             <span className="text-[#C69A69] text-xs tracking-widest uppercase font-medium px-4">
@@ -331,7 +303,6 @@ function EventsSection() {
           </p>
         </div>
 
-        {/* Event cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {EVENTS.map((event) => {
             const Icon = event.icon;
@@ -341,13 +312,11 @@ function EventsSection() {
                 className="group relative bg-[#1A1512] border border-[rgba(198,154,105,0.12)] hover:border-[rgba(198,154,105,0.35)] rounded-sm p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50 cursor-pointer overflow-hidden"
                 onClick={() => navigate(`/register/${event.slug}`)}
               >
-                {/* Top accent line */}
                 <div
                   className="absolute top-0 left-0 right-0 h-0.5 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"
                   style={{ background: `linear-gradient(90deg, ${event.color}, ${event.accent})` }}
                 />
 
-                {/* Icon */}
                 <div
                   className="w-12 h-12 flex items-center justify-center rounded-sm mb-5 transition-all duration-300 group-hover:scale-110"
                   style={{ background: `rgba(${event.color === '#873747' ? '135,55,71' : '198,154,105'},0.12)` }}
@@ -359,7 +328,6 @@ function EventsSection() {
                   />
                 </div>
 
-                {/* Content */}
                 <h3
                   className="text-xl font-bold text-[#F6EBDD] mb-1"
                   style={{ fontFamily: "'Playfair Display', serif" }}
@@ -380,7 +348,6 @@ function EventsSection() {
                   {event.description}
                 </p>
 
-                {/* Register button */}
                 <button
                   className="w-full py-2.5 text-xs font-medium tracking-widest uppercase border transition-all duration-300 rounded-sm group-hover:opacity-100"
                   style={{
@@ -416,13 +383,9 @@ function AboutSection() {
     <section id="about" className="bg-[#101010] py-24 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          {/* Left — decorative */}
           <div className="relative hidden lg:block">
             <div className="absolute inset-0 rounded-sm border border-[rgba(198,154,105,0.1)]" />
-            <div
-              className="aspect-square rounded-sm flex items-center justify-center bg-[#1A1512] border border-[rgba(198,154,105,0.08)] relative overflow-hidden"
-            >
-              {/* Large decorative letter */}
+            <div className="aspect-square rounded-sm flex items-center justify-center bg-[#1A1512] border border-[rgba(198,154,105,0.08)] relative overflow-hidden">
               <span
                 className="text-[18rem] font-black leading-none select-none"
                 style={{
@@ -434,7 +397,11 @@ function AboutSection() {
                 S
               </span>
               <div className="relative z-10 text-center space-y-6 p-12">
-                <Feather size={48} className="text-[#C69A69] mx-auto" strokeWidth={1} />
+                <img
+                  src="/scriptink-logo.jpeg"
+                  alt="ScriptInk logo"
+                  className="h-12 w-12 object-contain mx-auto"
+                />
                 <p
                   className="text-3xl text-[#C69A69]"
                   style={{ fontFamily: "'Dancing Script', cursive" }}
@@ -455,7 +422,6 @@ function AboutSection() {
             </div>
           </div>
 
-          {/* Right — text */}
           <div className="space-y-6">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
@@ -475,23 +441,22 @@ function AboutSection() {
 
             <div className="space-y-4 text-[#F6EBDD]/60 leading-relaxed">
               <p>
-                ScriptInk is a college literary club dedicated to nurturing creative expression, 
-                fostering a love for literature, and building a community of storytellers, 
+                ScriptInk is a college literary club dedicated to nurturing creative expression,
+                fostering a love for literature, and building a community of storytellers,
                 poets and wordsmiths.
               </p>
               <p>
-                We believe every individual carries a story worth sharing. Our events, workshops 
-                and open forums are designed to give those stories a platform — to be heard, 
+                We believe every individual carries a story worth sharing. Our events, workshops
+                and open forums are designed to give those stories a platform — to be heard,
                 celebrated and remembered.
               </p>
               <p>
-                Writofest is our flagship annual festival — a convergence of creative minds, 
-                bold voices and unforgettable expressions. Join us for a day where words 
+                Writofest is our flagship annual festival — a convergence of creative minds,
+                bold voices and unforgettable expressions. Join us for a day where words
                 become worlds.
               </p>
             </div>
 
-            {/* Stats */}
             <div className="grid grid-cols-3 gap-4 pt-4">
               {[
                 { value: '4', label: 'Events' },

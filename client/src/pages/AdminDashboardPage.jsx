@@ -6,12 +6,12 @@ import {
   adminLogout,
 } from '../services/api';
 import {
-  Feather, LogOut, Download, Search, RefreshCw,
+  LogOut, Download, Search, RefreshCw,
   PenLine, Zap, Mic, BookOpen, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const EVENT_META = {
+const ne = {
   writing: { icon: PenLine, label: 'Writing', color: '#873747' },
   'pop-up-quiz': { icon: Zap, label: 'Pop-Up Quiz', color: '#C69A69' },
   'open-mic': { icon: Mic, label: 'Open Mic', color: '#873747' },
@@ -106,7 +106,11 @@ export default function AdminDashboardPage() {
       <header className="bg-[#101010] border-b border-[rgba(198,154,105,0.15)] sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Feather size={18} className="text-[#C69A69]" />
+            <img
+              src="/scriptink-logo.jpeg"
+              alt="ScriptInk logo"
+              className="h-10 w-10 object-contain"
+              />
             <span
               className="text-xl text-[#F6EBDD]"
               style={{ fontFamily: "'Dancing Script', cursive" }}

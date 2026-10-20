@@ -4,7 +4,12 @@ const Registration = require("../models/Registration");
 
 const router = express.Router();
 
-// POST: Register for an event
+const ALLOWED_EVENTS = [
+  "writing",
+  "open-mic",
+  "quiz",
+];
+
 router.post("/", async (req, res) => {
   try {
     const {
@@ -14,22 +19,28 @@ router.post("/", async (req, res) => {
       phone,
       institution,
       year,
-      event,
+      events: submittedEvents,
+      event: submittedEvent,
     } = req.body;
 
-    // Check required fields
+    const selectedEvents = Array.isArray(submittedEvents)
+      ? submittedEvents
+      : submittedEvent
+        ? [submittedEvent]
+        : [];
+
     if (
-      !name ||
-      !usn ||
-      !email ||
-      !phone ||
-      !institution ||
+      !name?.trim() ||
+      !usn?.trim() ||
+      !email?.trim() ||
+      !phone?.trim() ||
+      !institution?.trim() ||
       !year ||
-      !event
+      selectedEvents.length === 0
     ) {
       return res.status(400).json({
         success: false,
-        message: "Please fill in all required fields.",
+        message: "Please fill in all required fields and select at least one event.",
       });
     }
 
@@ -37,16 +48,15 @@ router.post("/", async (req, res) => {
     const cleanUsn = usn.trim().toUpperCase();
     const cleanEmail = email.trim().toLowerCase();
     const cleanPhone = phone.trim();
+    const cleanInstitution = institution.trim();
 
-    // Validate name
-    if (!/^[a-zA-Z\s.'-]+$/.test(cleanName)) {
+    if (cleanUsn.length < 5) {
       return res.status(400).json({
         success: false,
-        message: "Please enter a valid name.",
+        message: "USN must contain at least 5 characters.",
       });
     }
 
-    // Validate email
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
       return res.status(400).json({
         success: false,
@@ -54,50 +64,66 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Validate 10-digit phone number
     if (!/^\d{10}$/.test(cleanPhone)) {
       return res.status(400).json({
         success: false,
-        message: "Phone number must contain exactly 10 digits.",
+        message: "Phone number must contain 10 digits.",
       });
     }
 
-    // Validate USN
-    if (!/^[A-Z0-9]+$/.test(cleanUsn)) {
+    if (!["1st Year", "2nd Year", "3rd Year", "4th Year", "PG"].includes(year)) {
       return res.status(400).json({
         success: false,
-        message: "Please enter a valid USN.",
+        message: "Please select a valid year of study.",
       });
     }
 
-    // Generate custom registration ID:
-    // First 4 letters of the name + last 5 characters of USN
+    const cleanEvents = [...new Set(
+      selectedEvents.map((item) => String(item).trim().toLowerCase())
+    )];
+
+    if (cleanEvents.some((item) => !ALLOWED_EVENTS.includes(item))) {
+      return res.status(400).json({
+        success: false,
+        message: "One or more selected events are invalid.",
+      });
+    }
+
+    // First 4 letters of name + last 5 characters of USN
     const namePart = cleanName
       .replace(/[^a-zA-Z]/g, "")
       .substring(0, 4)
       .toUpperCase();
 
-    const usnPart = cleanUsn.slice(-5);
-
-    if (!namePart || usnPart.length !== 5) {
+    if (namePart.length < 4) {
       return res.status(400).json({
         success: false,
-        message: "Unable to generate registration ID. Check your name and USN.",
+        message: "Name must contain at least 4 letters for the Registration ID.",
       });
     }
 
-    const registrationId = `${namePart}${usnPart}`;
+    const registrationId = namePart + cleanUsn.slice(-5);
 
-    // Create registration — IMPORTANT: include registrationId
+    const existing = await Registration.findOne({ registrationId });
+
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: "This Registration ID already exists. Please contact the organizers.",
+      });
+    }
+
     const registration = await Registration.create({
       registrationId,
       name: cleanName,
       usn: cleanUsn,
       email: cleanEmail,
       phone: cleanPhone,
-      institution: institution.trim(),
-      year: String(year).trim(),
-      event: String(event).trim(),
+      institution: cleanInstitution,
+      year,
+      events: cleanEvents,
+      // Retained for compatibility with existing dashboard code.
+      event: cleanEvents.join(", "),
     });
 
     return res.status(201).json({
@@ -110,20 +136,10 @@ router.post("/", async (req, res) => {
   } catch (error) {
     console.error("Registration error:", error);
 
-    // Handle duplicate registration IDs
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
-        message:
-          "This registration ID already exists. Please contact the event organizers.",
-      });
-    }
-
-    if (error.name === "ValidationError") {
-      return res.status(400).json({
-        success: false,
-        message: "Registration validation failed.",
-        error: error.message,
+        message: "This Registration ID already exists. Please contact the organizers.",
       });
     }
 
@@ -134,28 +150,26 @@ router.post("/", async (req, res) => {
   }
 });
 
-// GET: Find registration using custom registration ID
+// Fetch registration details using the custom Registration ID
 router.get("/:id", async (req, res) => {
   try {
-    const registrationId = req.params.id.trim().toUpperCase();
-
     const registration = await Registration.findOne({
-      registrationId,
+      registrationId: req.params.id.toUpperCase(),
     });
 
     if (!registration) {
       return res.status(404).json({
         success: false,
-        message: "Registration not found.",
+        message: "Registration details not found.",
       });
     }
 
-    return res.status(200).json({
+    return res.json({
       success: true,
       data: registration,
     });
   } catch (error) {
-    console.error("Get registration error:", error);
+    console.error("Fetch registration error:", error);
 
     return res.status(500).json({
       success: false,

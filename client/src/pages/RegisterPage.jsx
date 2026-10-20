@@ -8,9 +8,9 @@ import {
   PenLine,
   Zap,
   Mic,
-  BookOpen,
   ArrowRight,
   Feather,
+  Check,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -18,38 +18,52 @@ const EVENTS = [
   {
     slug: 'writing',
     icon: PenLine,
-    title: 'Writing',
-    subtitle: 'Turn your thoughts into words.',
+    title: 'Ink Your Script ✍️',
+    subtitle: 'A celebration of imagination, where words paint what eyes cannot see.',
+    description: `Ink Your Script is a creative writing competition where participants weave poems and stories of their choice, inspired by images projected on the screen. Each image becomes a doorway to a world of imagination, inviting writers to explore the unseen, give voice to the unspoken, and transform fleeting thoughts into timeless narratives.
+
+As the Kannada saying beautifully expresses, “ರವಿ ಕಾಣದ್ದನ್ನು ಕವಿ ಕಂಡ” - What the sun cannot see, the poet can.
+
+More than just a writing competition, Ink Your Script is a journey through love, emotion, courage, and human connection, bringing countless feelings together in a single chapter of words. It is where imagination knows no boundaries, emotions find their voice, and every story leaves a mark.`,
     color: '#873747',
-  },
-  {
-    slug: 'pop-up-quiz',
-    icon: Zap,
-    title: 'Pop-Up Quiz',
-    subtitle: 'Think fast. Trust your instincts.',
-    color: '#C69A69',
   },
   {
     slug: 'open-mic',
     icon: Mic,
-    title: 'Open Mic',
-    subtitle: 'Your voice deserves a stage.',
+    title: 'Open Mic 🎤',
+    subtitle: 'Where Every Voice Finds Its Stage',
+    description: `Open Mic is a space where voices turn into stories, emotions transform into art, and every individual gets a chance to shine. Whether it’s poetry, storytelling, singing, stand-up comedy, or sharing thoughts from the heart, the stage is yours to express without boundaries.
+
+It’s not about being perfect; it’s about being real. Every voice carries a story, every performance holds an emotion, and every moment creates a memory.`,
     color: '#873747',
   },
   {
-    slug: 'storytelling',
-    icon: BookOpen,
-    title: 'Storytelling',
-    subtitle: 'Every story opens a new world.',
+    slug: 'quiz',
+    icon: Zap,
+    title: 'Quiz - The Art of Knowing',
+    subtitle: 'Facts meet curiosity, instincts meet intellect.',
+    description: `Some questions test what you know. Some challenge what you believe. And some make you think in ways you never have before.
+
+Quiz is where facts meet curiosity, instincts meet intellect, and ordinary questions lead to extraordinary discoveries. It’s a playground for curious minds, where every clue matters, every second counts, and the smallest detail can make the biggest difference.
+
+So, sharpen your minds, trust your instincts, and remember - the answer might be closer than you think, but the question is never as simple as it seems.`,
     color: '#C69A69',
   },
 ];
+
+const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'PG'];
 
 export default function RegisterPage() {
   const { eventSlug } = useParams();
   const navigate = useNavigate();
 
-  const [selectedEvent, setSelectedEvent] = useState(eventSlug || '');
+  const validEventSlug = EVENTS.some((event) => event.slug === eventSlug)
+    ? eventSlug
+    : '';
+
+  const [selectedEvents, setSelectedEvents] = useState(
+    validEventSlug ? [validEventSlug] : []
+  );
 
   const [form, setForm] = useState({
     name: '',
@@ -58,65 +72,89 @@ export default function RegisterPage() {
     phone: '',
     institution: '',
     year: '',
-    event: eventSlug || '',
   });
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
   const handleEventSelect = (slug) => {
-    setSelectedEvent(slug);
-    setForm((f) => ({ ...f, event: slug }));
-    setErrors((prev) => ({ ...prev, event: '' }));
+    setSelectedEvents((previous) =>
+      previous.includes(slug)
+        ? previous.filter((event) => event !== slug)
+        : [...previous, slug]
+    );
+
+    setErrors((previous) => ({
+      ...previous,
+      events: '',
+    }));
+  };
+
+  const handleChange = (field, value) => {
+    setForm((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+
+    setErrors((previous) => ({
+      ...previous,
+      [field]: '',
+    }));
   };
 
   const validate = () => {
-    const e = {};
+    const validationErrors = {};
 
     if (!form.name.trim()) {
-      e.name = 'Name is required';
+      validationErrors.name = 'Name is required';
+    } else if (
+      form.name.trim().replace(/[^a-zA-Z]/g, '').length < 4
+    ) {
+      validationErrors.name =
+        'Name must contain at least 4 letters for the Registration ID';
     }
 
     if (!form.usn.trim()) {
-      e.usn = 'USN is required';
+      validationErrors.usn = 'USN is required';
+    } else if (form.usn.trim().length < 5) {
+      validationErrors.usn = 'USN must contain at least 5 characters';
     }
 
     if (
       !form.email.trim() ||
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())
     ) {
-      e.email = 'Valid email is required';
+      validationErrors.email = 'Please enter a valid email address';
     }
 
-    if (
-      !form.phone.trim() ||
-      !/^\d{10}$/.test(form.phone.replace(/\s/g, ''))
-    ) {
-      e.phone = 'Valid 10-digit phone number is required';
+    if (!/^\d{10}$/.test(form.phone.replace(/\s/g, ''))) {
+      validationErrors.phone =
+        'Valid 10-digit phone number is required';
     }
 
     if (!form.institution.trim()) {
-      e.institution = 'Institution name is required';
+      validationErrors.institution = 'Institution name is required';
     }
 
     if (!form.year) {
-      e.year = 'Year of study is required';
+      validationErrors.year = 'Year of study is required';
     }
 
-    if (!form.event) {
-      e.event = 'Please select an event';
+    if (selectedEvents.length === 0) {
+      validationErrors.events = 'Please select at least one event';
     }
 
-    return e;
+    return validationErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const errs = validate();
+    const validationErrors = validate();
 
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.error('Please check the form and try again.');
       return;
     }
 
@@ -131,26 +169,29 @@ export default function RegisterPage() {
         email: form.email.trim().toLowerCase(),
         phone: form.phone.replace(/\s/g, ''),
         institution: form.institution.trim(),
+        events: selectedEvents,
       };
 
       const res = await submitRegistration(registrationData);
 
-      const regId =
+      const registrationId =
         res.data?.data?.registrationId || res.data?.registrationId;
 
-      if (!regId) {
-        throw new Error('Registration was submitted, but no registration ID was returned.');
+      if (!registrationId) {
+        throw new Error(
+          'Registration was submitted, but no Registration ID was returned.'
+        );
       }
 
       toast.success('Registration successful!');
-      navigate(`/success/${regId}`);
+      navigate(`/success/${registrationId}`);
     } catch (err) {
-      const msg =
+      const message =
         err.response?.data?.message ||
         err.message ||
         'Registration failed. Please try again.';
 
-      toast.error(msg);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -187,90 +228,130 @@ export default function RegisterPage() {
               </span>
             </div>
 
+            <p className="text-[#C69A69] text-xs tracking-[0.2em] uppercase">
+              State-Level Event
+            </p>
+
             <h1
               className="text-4xl sm:text-5xl font-bold text-[#F6EBDD]"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              Register for an Event
+              Register for Writofest
             </h1>
 
             <p className="text-[#F6EBDD]/50 max-w-md mx-auto">
-              Choose your stage and secure your spot at Writofest 2K26.
+              Choose your events and secure your spot at Writofest 2K26.
             </p>
           </div>
         </section>
 
-        <section className="max-w-4xl mx-auto px-6 lg:px-8 py-16 space-y-12">
+        <section className="max-w-5xl mx-auto px-6 lg:px-8 py-16 space-y-12">
           {/* Event selection */}
-          <div className="space-y-4">
-            <h2
-              className="text-xl font-semibold text-[#F6EBDD]"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              1. Choose Your Event
-            </h2>
+          <div className="space-y-5">
+            <div>
+              <h2
+                className="text-xl font-semibold text-[#F6EBDD]"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                1. Choose Your Events
+              </h2>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {EVENTS.map((ev) => {
-                const Icon = ev.icon;
-                const active = selectedEvent === ev.slug;
+              <p className="text-sm text-[#F6EBDD]/45 mt-2">
+                Select one or more events to participate in.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {EVENTS.map((event) => {
+                const Icon = event.icon;
+                const active = selectedEvents.includes(event.slug);
 
                 return (
                   <button
-                    key={ev.slug}
+                    key={event.slug}
                     type="button"
-                    onClick={() => handleEventSelect(ev.slug)}
-                    className={`relative p-4 rounded-sm border text-left transition-all duration-300 group ${
+                    aria-pressed={active}
+                    onClick={() => handleEventSelect(event.slug)}
+                    className={`relative p-5 rounded-sm border text-left transition-all duration-300 ${
                       active
                         ? 'border-[#C69A69] bg-[rgba(198,154,105,0.08)]'
-                        : 'border-[rgba(198,154,105,0.15)] bg-[#1A1512] hover:border-[rgba(198,154,105,0.35)]'
+                        : 'border-[rgba(198,154,105,0.15)] bg-[#1A1512] hover:border-[rgba(198,154,105,0.4)]'
                     }`}
                   >
                     {active && (
                       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#C69A69] to-[#873747]" />
                     )}
 
-                    <div
-                      className="w-9 h-9 flex items-center justify-center rounded-sm mb-3"
-                      style={{
-                        background: `rgba(${
-                          ev.color === '#873747'
-                            ? '135,55,71'
-                            : '198,154,105'
-                        },0.12)`,
-                      }}
-                    >
-                      <Icon
-                        size={18}
+                    <div className="flex justify-between items-start gap-3">
+                      <div
+                        className="w-10 h-10 flex items-center justify-center rounded-sm shrink-0"
                         style={{
-                          color:
-                            ev.color === '#873747' ? '#873747' : '#C69A69',
+                          background:
+                            event.color === '#873747'
+                              ? 'rgba(135,55,71,0.15)'
+                              : 'rgba(198,154,105,0.15)',
                         }}
-                        strokeWidth={1.5}
-                      />
+                      >
+                        <Icon
+                          size={20}
+                          style={{ color: event.color }}
+                          strokeWidth={1.5}
+                        />
+                      </div>
+
+                      <span
+                        className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 ${
+                          active
+                            ? 'bg-[#C69A69] border-[#C69A69] text-[#101010]'
+                            : 'border-[rgba(198,154,105,0.35)] text-transparent'
+                        }`}
+                      >
+                        {active && <Check size={15} />}
+                      </span>
                     </div>
 
-                    <p
-                      className="text-sm font-bold text-[#F6EBDD] mb-0.5"
+                    <h3
+                      className="text-base font-bold text-[#F6EBDD] mt-4 mb-2"
                       style={{ fontFamily: "'Playfair Display', serif" }}
                     >
-                      {ev.title}
+                      {event.title}
+                    </h3>
+
+                    <p className="text-sm text-[#C69A69] leading-relaxed mb-3">
+                      {event.subtitle}
                     </p>
 
-                    <p className="text-xs text-[#F6EBDD]/40 leading-tight">
-                      {ev.subtitle}
+                    <p className="text-sm text-[#F6EBDD]/55 leading-relaxed whitespace-pre-line">
+                      {event.description}
+                    </p>
+
+                    <p
+                      className={`text-xs mt-4 font-medium ${
+                        active ? 'text-[#C69A69]' : 'text-[#F6EBDD]/35'
+                      }`}
+                    >
+                      {active ? 'Selected' : 'Tap to select'}
                     </p>
                   </button>
                 );
               })}
             </div>
 
-            {errors.event && (
-              <p className="text-[#873747] text-xs mt-1">{errors.event}</p>
+            {errors.events && (
+              <p className="text-[#873747] text-xs mt-1">
+                {errors.events}
+              </p>
+            )}
+
+            {selectedEvents.length > 0 && (
+              <p className="text-sm text-[#C69A69]">
+                {selectedEvents.length}{' '}
+                {selectedEvents.length === 1 ? 'event' : 'events'} selected
+              </p>
             )}
           </div>
 
-          {/* Registration form */}
+          {/* Participant details */}
           <div className="space-y-4">
             <h2
               className="text-xl font-semibold text-[#F6EBDD]"
@@ -296,9 +377,7 @@ export default function RegisterPage() {
                     placeholder="Your name"
                     autoComplete="name"
                     value={form.name}
-                    onChange={(e) =>
-                      setForm({ ...form, name: e.target.value })
-                    }
+                    onChange={(e) => handleChange('name', e.target.value)}
                     className={inputClass('name')}
                   />
 
@@ -319,10 +398,7 @@ export default function RegisterPage() {
                     autoComplete="off"
                     value={form.usn}
                     onChange={(e) =>
-                      setForm({
-                        ...form,
-                        usn: e.target.value.toUpperCase(),
-                      })
+                      handleChange('usn', e.target.value.toUpperCase())
                     }
                     className={inputClass('usn')}
                   />
@@ -343,9 +419,7 @@ export default function RegisterPage() {
                     placeholder="you@example.com"
                     autoComplete="email"
                     value={form.email}
-                    onChange={(e) =>
-                      setForm({ ...form, email: e.target.value })
-                    }
+                    onChange={(e) => handleChange('email', e.target.value)}
                     className={inputClass('email')}
                   />
 
@@ -365,9 +439,7 @@ export default function RegisterPage() {
                     placeholder="10-digit mobile number"
                     autoComplete="tel"
                     value={form.phone}
-                    onChange={(e) =>
-                      setForm({ ...form, phone: e.target.value })
-                    }
+                    onChange={(e) => handleChange('phone', e.target.value)}
                     className={inputClass('phone')}
                   />
 
@@ -388,7 +460,7 @@ export default function RegisterPage() {
                     autoComplete="organization"
                     value={form.institution}
                     onChange={(e) =>
-                      setForm({ ...form, institution: e.target.value })
+                      handleChange('institution', e.target.value)
                     }
                     className={inputClass('institution')}
                   />
@@ -407,25 +479,20 @@ export default function RegisterPage() {
                   </label>
 
                   <div className="flex gap-3 flex-wrap">
-                    {['1st Year', '2nd Year', '3rd Year', '4th Year', 'PG'].map(
-                      (yr) => (
-                        <button
-                          key={yr}
-                          type="button"
-                          onClick={() => {
-                            setForm({ ...form, year: yr });
-                            setErrors((prev) => ({ ...prev, year: '' }));
-                          }}
-                          className={`px-4 py-2 text-sm rounded-sm border transition-all duration-200 ${
-                            form.year === yr
-                              ? 'border-[#C69A69] bg-[rgba(198,154,105,0.1)] text-[#C69A69]'
-                              : 'border-[rgba(198,154,105,0.2)] text-[#F6EBDD]/60 hover:border-[rgba(198,154,105,0.4)] hover:text-[#F6EBDD]'
-                          }`}
-                        >
-                          {yr}
-                        </button>
-                      )
-                    )}
+                    {YEARS.map((year) => (
+                      <button
+                        key={year}
+                        type="button"
+                        onClick={() => handleChange('year', year)}
+                        className={`px-4 py-2 text-sm rounded-sm border transition-all duration-200 ${
+                          form.year === year
+                            ? 'border-[#C69A69] bg-[rgba(198,154,105,0.1)] text-[#C69A69]'
+                            : 'border-[rgba(198,154,105,0.2)] text-[#F6EBDD]/60 hover:border-[rgba(198,154,105,0.4)] hover:text-[#F6EBDD]'
+                        }`}
+                      >
+                        {year}
+                      </button>
+                    ))}
                   </div>
 
                   {errors.year && (
@@ -434,7 +501,6 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Divider */}
               <div className="h-px bg-gradient-to-r from-transparent via-[rgba(198,154,105,0.15)] to-transparent" />
 
               {/* Submit */}

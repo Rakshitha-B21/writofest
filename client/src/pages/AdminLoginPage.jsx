@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminLogin } from '../services/api';
-import { Feather, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminLoginPage() {
@@ -58,7 +58,11 @@ export default function AdminLoginPage() {
         {/* Brand */}
         <div className="text-center mb-10 space-y-3">
           <div className="inline-flex items-center gap-2">
-            <Feather size={22} className="text-[#C69A69]" />
+            <img
+              src="/scriptink-logo.jpeg"
+              alt="ScriptInk logo"
+              className="h-10 w-10 object-contain"
+            />
             <span
               className="text-3xl text-[#F6EBDD]"
               style={{ fontFamily: "'Dancing Script', cursive" }}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Feather } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 const NAV_LINKS = [
   { label: 'Home', href: '/#home' },
@@ -21,11 +21,14 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => { setOpen(false); }, [location]);
+  useEffect(() => {
+    setOpen(false);
+  }, [location]);
 
   const handleNavClick = (e, href) => {
     if (href.startsWith('/#')) {
       e.preventDefault();
+
       if (location.pathname !== '/') {
         navigate('/');
         setTimeout(() => {
@@ -36,6 +39,7 @@ export default function Header() {
         const el = document.querySelector(href.slice(1));
         el?.scrollIntoView({ behavior: 'smooth' });
       }
+
       setOpen(false);
     }
   };
@@ -49,25 +53,30 @@ export default function Header() {
       }`}
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Wordmark */}
+        {/* Logo and Wordmark */}
         <Link
           to="/"
           className="flex items-center gap-2 group"
           aria-label="ScriptInk — Writofest 2K26 Home"
         >
-          <Feather
-            size={20}
-            className="text-[#C69A69] group-hover:rotate-12 transition-transform duration-300"
+          <img
+            src="/scriptink-logo.jpeg"
+            alt="ScriptInk logo"
+            className="h-10 w-10 object-contain transition-transform duration-300 group-hover:scale-110"
           />
+
           <span
             className="text-2xl text-[#F6EBDD] leading-none"
-            style={{ fontFamily: "'Dancing Script', cursive", letterSpacing: '0.02em' }}
+            style={{
+              fontFamily: "'Dancing Script', cursive",
+              letterSpacing: '0.02em',
+            }}
           >
             ScriptInk
           </span>
         </Link>
 
-        {/* Desktop Nav */}
+        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
           {NAV_LINKS.map((link) => (
             <a
@@ -83,6 +92,7 @@ export default function Header() {
               {link.label}
             </a>
           ))}
+
           <Link
             to="/admin/login"
             className="ml-2 px-4 py-1.5 text-xs font-medium tracking-widest uppercase border border-[rgba(198,154,105,0.4)] text-[#C69A69] hover:bg-[#C69A69] hover:text-[#101010] transition-all duration-300 rounded-sm"
@@ -91,7 +101,7 @@ export default function Header() {
           </Link>
         </div>
 
-        {/* Mobile hamburger */}
+        {/* Mobile Hamburger */}
         <button
           className="md:hidden text-[#F6EBDD] p-2 rounded focus-visible:outline-[#C69A69]"
           onClick={() => setOpen(!open)}
@@ -102,7 +112,7 @@ export default function Header() {
         </button>
       </nav>
 
-      {/* Mobile menu */}
+      {/* Mobile Menu */}
       <div
         className={`md:hidden bg-[#1E1A17] border-t border-[rgba(198,154,105,0.15)] transition-all duration-300 overflow-hidden ${
           open ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'
@@ -119,6 +129,7 @@ export default function Header() {
               {link.label}
             </a>
           ))}
+
           <Link
             to="/admin/login"
             className="text-center px-4 py-2 text-xs font-medium tracking-widest uppercase border border-[rgba(198,154,105,0.4)] text-[#C69A69] hover:bg-[#C69A69] hover:text-[#101010] transition-all duration-300 rounded-sm"
