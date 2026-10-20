@@ -451,7 +451,7 @@ function AboutSection() {
 
             <div className="grid grid-cols-3 gap-4 pt-4">
               {[
-                { value: '4', label: 'Events' },
+                { value: '3', label: 'Events' },
                 { value: '∞', label: 'Stories' },
                 { value: '1', label: 'Stage' },
               ].map((stat) => (
