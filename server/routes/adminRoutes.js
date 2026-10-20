@@ -10,8 +10,10 @@ const {
 } = require("../middleware/adminAuth");
 
 const router = express.Router();
-const VALID_EVENTS = ["writing", "pop-up-quiz", "open-mic", "storytelling"];
+
+const VALID_EVENTS = ["writing", "open-mic", "quiz"];
 const TOKEN_AUDIENCE = "writofest-admin-dashboard";
+
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
@@ -37,20 +39,43 @@ const readFilters = (query) => {
   if (search.length > 100) {
     return { error: "Search text must be 100 characters or fewer." };
   }
+
   if (event && !VALID_EVENTS.includes(event)) {
     return { error: "Please select a valid event." };
   }
 
   const filters = {};
-  if (event) filters.event = event;
+  const conditions = [];
+
+  if (event) {
+    conditions.push({
+      $or: [
+        { events: event },
+        { event: event },
+        {
+          event: {
+            $regex: `(^|,\\s*)${event}(\\s*,|$)`,
+          },
+        },
+      ],
+    });
+  }
+
   if (search) {
     const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const searchPattern = new RegExp(escapedSearch, "i");
-    filters.$or = [
-      { name: searchPattern },
-      { usn: searchPattern },
-      { registrationId: searchPattern },
-    ];
+
+    conditions.push({
+      $or: [
+        { name: searchPattern },
+        { usn: searchPattern },
+        { registrationId: searchPattern },
+      ],
+    });
+  }
+
+  if (conditions.length > 0) {
+    filters.$and = conditions;
   }
 
   return { filters };
@@ -58,9 +83,11 @@ const readFilters = (query) => {
 
 const csvCell = (value) => {
   let text = value == null ? "" : String(value);
+
   if (/^[\s\u0000-\u001f]*[=+\-@]/.test(text)) {
     text = `'${text}`;
   }
+
   return `"${text.replace(/"/g, '""')}"`;
 };
 
@@ -76,6 +103,7 @@ const toCsv = (registrations) => {
     ["Event", "event"],
     ["Registered At", "createdAt"],
   ];
+
   const rows = [
     columns.map(([label]) => csvCell(label)).join(","),
     ...registrations.map((registration) =>
@@ -96,6 +124,7 @@ const toCsv = (registrations) => {
 
 router.post("/login", loginLimiter, async (req, res) => {
   const config = getAdminConfig();
+
   if (!config) {
     return res.status(503).json({
       success: false,
@@ -104,6 +133,7 @@ router.post("/login", loginLimiter, async (req, res) => {
   }
 
   const { username, password } = req.body || {};
+
   if (typeof username !== "string" || typeof password !== "string") {
     return res.status(400).json({
       success: false,
@@ -113,6 +143,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 
   try {
     const passwordMatches = await bcrypt.compare(password, config.passwordHash);
+
     if (username.trim() !== config.username || !passwordMatches) {
       return res.status(401).json({
         success: false,
@@ -135,6 +166,7 @@ router.post("/login", loginLimiter, async (req, res) => {
     return res.json({ success: true, token });
   } catch (error) {
     console.error("Admin login error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Unable to complete admin login.",
@@ -148,11 +180,16 @@ router.post("/logout", requireAdmin, (_req, res) => {
 
 router.get("/me", requireAdmin, (req, res) => {
   res.set("Cache-Control", "no-store");
-  res.json({ success: true, data: { username: req.admin.username } });
+
+  res.json({
+    success: true,
+    data: { username: req.admin.username },
+  });
 });
 
 router.get("/registrations/export", requireAdmin, async (req, res) => {
   const { filters, error } = readFilters(req.query);
+
   if (error) {
     return res.status(400).json({ success: false, message: error });
   }
@@ -167,9 +204,11 @@ router.get("/registrations/export", requireAdmin, async (req, res) => {
       "Content-Disposition": 'attachment; filename="writofest-registrations.csv"',
       "Cache-Control": "no-store",
     });
+
     return res.send(toCsv(registrations));
   } catch (error) {
     console.error("Admin registration export error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Unable to export registrations.",
@@ -179,12 +218,14 @@ router.get("/registrations/export", requireAdmin, async (req, res) => {
 
 router.get("/registrations", requireAdmin, async (req, res) => {
   const { filters, error } = readFilters(req.query);
+
   if (error) {
     return res.status(400).json({ success: false, message: error });
   }
 
   const page = Number(req.query.page ?? 1);
   const limit = Number(req.query.limit ?? 20);
+
   if (
     !Number.isInteger(page) ||
     page < 1 ||
@@ -199,25 +240,82 @@ router.get("/registrations", requireAdmin, async (req, res) => {
   }
 
   try {
-    const [registrations, matchingTotal, allTotal, eventCounts] = await Promise.all([
+    const [
+      registrations,
+      matchingTotal,
+      allTotal,
+      eventCounts,
+    ] = await Promise.all([
       Registration.find(filters)
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .lean(),
+
       Registration.countDocuments(filters),
+
       Registration.countDocuments(),
+
       Registration.aggregate([
-        { $group: { _id: "$event", count: { $sum: 1 } } },
+        {
+          $project: {
+            selectedEvents: {
+              $setUnion: [
+                { $ifNull: ["$events", []] },
+                {
+                  $cond: [
+                    {
+                      $gt: [
+                        {
+                          $strLenCP: {
+                            $ifNull: ["$event", ""],
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                    {
+                      $split: [
+                        { $ifNull: ["$event", ""] },
+                        ",",
+                      ],
+                    },
+                    [],
+                  ],
+                },
+              ],
+            },
+          },
+        },
+        { $unwind: "$selectedEvents" },
+        {
+          $project: {
+            event: {
+              $trim: { input: "$selectedEvents" },
+            },
+          },
+        },
+        {
+          $group: {
+            _id: "$event",
+            count: { $sum: 1 },
+          },
+        },
       ]),
     ]);
 
-    const byEvent = Object.fromEntries(VALID_EVENTS.map((event) => [event, 0]));
+    const byEvent = Object.fromEntries(
+      VALID_EVENTS.map((event) => [event, 0])
+    );
+
     eventCounts.forEach(({ _id, count }) => {
-      if (Object.hasOwn(byEvent, _id)) byEvent[_id] = count;
+      if (Object.hasOwn(byEvent, _id)) {
+        byEvent[_id] = count;
+      }
     });
 
     res.set("Cache-Control", "no-store");
+
     return res.json({
       success: true,
       data: {
@@ -225,11 +323,15 @@ router.get("/registrations", requireAdmin, async (req, res) => {
         total: matchingTotal,
         page,
         limit,
-        stats: { total: allTotal, byEvent },
+        stats: {
+          total: allTotal,
+          byEvent,
+        },
       },
     });
   } catch (error) {
     console.error("Admin registrations error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Unable to load registrations.",
