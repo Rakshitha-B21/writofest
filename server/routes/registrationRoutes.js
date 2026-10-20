@@ -103,4 +103,41 @@ router.post("/", async (req, res) => {
   }
 });
 
+
+ // Get registration details by ID
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid registration ID.",
+      });
+    }
+
+    const registration = await Registration.findById(id);
+
+    if (!registration) {
+      return res.status(404).json({
+        success: false,
+        message: "Registration not found.",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: registration,
+    });
+  } catch (error) {
+    console.error("Fetch registration error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not fetch registration details.",
+    });
+  }
+});
+
+
 module.exports = router;

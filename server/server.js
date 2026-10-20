@@ -9,8 +9,13 @@ const registrationRoutes = require("./routes/registrationRoutes");
 
 const app = express();
 
-app.use(cors());
 app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use("/api/events", eventRoutes);
 app.use("/api/registrations", registrationRoutes);
 
