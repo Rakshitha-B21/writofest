@@ -72,6 +72,9 @@ export default function RegisterPage() {
     phone: '',
     institution: '',
     year: '',
+    branch: '',
+    referralCode: '',
+    message: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -136,6 +139,10 @@ export default function RegisterPage() {
       validationErrors.institution = 'Institution name is required';
     }
 
+    if (!form.branch.trim()) {
+      validationErrors.branch = 'Branch is required';
+    }
+
     if (!form.year) {
       validationErrors.year = 'Year of study is required';
     }
@@ -169,6 +176,9 @@ export default function RegisterPage() {
         email: form.email.trim().toLowerCase(),
         phone: form.phone.replace(/\s/g, ''),
         institution: form.institution.trim(),
+        branch: form.branch.trim(),
+        referralCode: form.referralCode.trim(),
+        message: form.message.trim(),
         events: selectedEvents,
       };
 
@@ -472,6 +482,45 @@ export default function RegisterPage() {
                   )}
                 </div>
 
+                {/* Branch */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs text-[#C69A69] tracking-widest uppercase font-medium">
+                    Branch *
+                  </label>
+
+                  <input
+                    type="text"
+                    placeholder="e.g. CSE, ECE, Mechanical"
+                    autoComplete="off"
+                    value={form.branch}
+                    onChange={(e) => handleChange('branch', e.target.value)}
+                    className={inputClass('branch')}
+                  />
+
+                  {errors.branch && (
+                    <p className="text-[#873747] text-xs">
+                      {errors.branch}
+                    </p>
+                  )}
+                </div>
+
+                {/* Referral Code */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs text-[#C69A69] tracking-widest uppercase font-medium">
+                    Referral Code (Optional)
+                  </label>
+
+                  <input
+                    type="text"
+                    placeholder="Enter a referral code"
+                    value={form.referralCode}
+                    onChange={(e) =>
+                      handleChange('referralCode', e.target.value)
+                    }
+                    className={inputClass('referralCode')}
+                  />
+                </div>
+
                 {/* Year of Study */}
                 <div className="space-y-1.5 sm:col-span-2">
                   <label className="block text-xs text-[#C69A69] tracking-widest uppercase font-medium">
@@ -499,6 +548,21 @@ export default function RegisterPage() {
                     <p className="text-[#873747] text-xs">{errors.year}</p>
                   )}
                 </div>
+              </div>
+
+              {/* Message / Queries */}
+              <div className="space-y-1.5">
+                <label className="block text-xs text-[#C69A69] tracking-widest uppercase font-medium">
+                  Message / Queries (Optional)
+                </label>
+
+                <textarea
+                  rows={4}
+                  placeholder="Any questions or messages for the organizers?"
+                  value={form.message}
+                  onChange={(e) => handleChange('message', e.target.value)}
+                  className={`${inputClass('message')} resize-y`}
+                />
               </div>
 
               <div className="h-px bg-gradient-to-r from-transparent via-[rgba(198,154,105,0.15)] to-transparent" />

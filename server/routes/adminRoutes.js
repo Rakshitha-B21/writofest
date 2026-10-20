@@ -99,8 +99,11 @@ const toCsv = (registrations) => {
     ["Email", "email"],
     ["Phone", "phone"],
     ["Institution", "institution"],
+    ["Branch", "branch"],
     ["Year", "year"],
     ["Event", "event"],
+    ["Referral Code", "referralCode"],
+    ["Message / Queries", "message"],
     ["Registered At", "createdAt"],
   ];
 

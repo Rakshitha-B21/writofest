@@ -49,6 +49,24 @@ const registrationSchema = new mongoose.Schema(
       trim: true,
     },
 
+    branch: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    referralCode: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    message: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     // Compatibility with the existing registration route/dashboard
     event: {
       type: String,

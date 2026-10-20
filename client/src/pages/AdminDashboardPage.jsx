@@ -335,6 +335,8 @@ export default function AdminDashboardPage() {
                     'Institution',
                     'Year',
                     'Event',
+                    'Referral Code',
+                    'Message / Queries',
                     'Date',
                   ].map((heading) => (
                     <th
@@ -350,7 +352,7 @@ export default function AdminDashboardPage() {
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan={10} className="py-12 text-center">
+                    <td colSpan={12} className="py-12 text-center">
                       <div className="flex items-center justify-center gap-3">
                         <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#C69A69] border-t-transparent" />
 
@@ -364,7 +366,7 @@ export default function AdminDashboardPage() {
 
                 {!loading && registrations.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="py-12 text-center">
+                    <td colSpan={12} className="py-12 text-center">
                       <p className="text-sm text-[#F6EBDD]/30">
                         No registrations found.
                       </p>
@@ -452,6 +454,17 @@ export default function AdminDashboardPage() {
                               </span>
                             )}
                           </div>
+                        </td>
+
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-[#F6EBDD]/60">
+                          {reg.referralCode || '—'}
+                        </td>
+
+                        <td
+                          className="max-w-[220px] truncate px-4 py-3 text-[#F6EBDD]/60"
+                          title={reg.message || ''}
+                        >
+                          {reg.message || '—'}
                         </td>
 
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-[#F6EBDD]/40">

@@ -19,9 +19,22 @@ router.post("/", async (req, res) => {
       phone,
       institution,
       year,
+      branch,
+      referralCode,
+      message,
       events: submittedEvents,
       event: submittedEvent,
     } = req.body;
+
+    if (
+      (referralCode != null && typeof referralCode !== "string") ||
+      (message != null && typeof message !== "string")
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Referral code and message must be text.",
+      });
+    }
 
     const selectedEvents = Array.isArray(submittedEvents)
       ? submittedEvents
@@ -29,6 +42,7 @@ router.post("/", async (req, res) => {
         ? [submittedEvent]
         : [];
 
+    // Validate required fields, including branch
     if (
       !name?.trim() ||
       !usn?.trim() ||
@@ -36,11 +50,13 @@ router.post("/", async (req, res) => {
       !phone?.trim() ||
       !institution?.trim() ||
       !year ||
+      !branch?.trim() ||
       selectedEvents.length === 0
     ) {
       return res.status(400).json({
         success: false,
-        message: "Please fill in all required fields and select at least one event.",
+        message:
+          "Please fill in all required fields and select at least one event.",
       });
     }
 
@@ -49,6 +65,10 @@ router.post("/", async (req, res) => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanPhone = phone.trim();
     const cleanInstitution = institution.trim();
+    const cleanBranch = branch.trim();
+    const cleanReferralCode =
+      typeof referralCode === "string" ? referralCode.trim() : "";
+    const cleanMessage = typeof message === "string" ? message.trim() : "";
 
     if (cleanUsn.length < 5) {
       return res.status(400).json({
@@ -71,16 +91,22 @@ router.post("/", async (req, res) => {
       });
     }
 
-    if (!["1st Year", "2nd Year", "3rd Year", "4th Year", "PG"].includes(year)) {
+    if (
+      !["1st Year", "2nd Year", "3rd Year", "4th Year", "PG"].includes(year)
+    ) {
       return res.status(400).json({
         success: false,
         message: "Please select a valid year of study.",
       });
     }
 
-    const cleanEvents = [...new Set(
-      selectedEvents.map((item) => String(item).trim().toLowerCase())
-    )];
+    const cleanEvents = [
+      ...new Set(
+        selectedEvents.map((item) =>
+          String(item).trim().toLowerCase()
+        )
+      ),
+    ];
 
     if (cleanEvents.some((item) => !ALLOWED_EVENTS.includes(item))) {
       return res.status(400).json({
@@ -98,7 +124,8 @@ router.post("/", async (req, res) => {
     if (namePart.length < 4) {
       return res.status(400).json({
         success: false,
-        message: "Name must contain at least 4 letters for the Registration ID.",
+        message:
+          "Name must contain at least 4 letters for the Registration ID.",
       });
     }
 
@@ -109,7 +136,8 @@ router.post("/", async (req, res) => {
     if (existing) {
       return res.status(409).json({
         success: false,
-        message: "This Registration ID already exists. Please contact the organizers.",
+        message:
+          "This Registration ID already exists. Please contact the organizers.",
       });
     }
 
@@ -121,7 +149,11 @@ router.post("/", async (req, res) => {
       phone: cleanPhone,
       institution: cleanInstitution,
       year,
+      branch: cleanBranch,
+      referralCode: cleanReferralCode,
+      message: cleanMessage,
       events: cleanEvents,
+
       // Retained for compatibility with existing dashboard code.
       event: cleanEvents.join(", "),
     });
@@ -139,7 +171,8 @@ router.post("/", async (req, res) => {
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
-        message: "This Registration ID already exists. Please contact the organizers.",
+        message:
+          "This Registration ID already exists. Please contact the organizers.",
       });
     }
 
