@@ -1,19 +1,19 @@
-import { Globe, Share2, ExternalLink } from 'lucide-react';
-import { Link } from 'react-router-dom';
+
+import { FaInstagram, FaYoutube, FaLinkedin } from 'react-icons/fa';
 
 const SOCIAL_LINKS = [
   {
-    icon: Globe,
+    icon: FaInstagram,
     label: 'Instagram',
     href: 'https://www.instagram.com/scriptink_official?mdxt=MTB4cmx1NDhiM280Zg==',
   },
   {
-    icon: Share2,
+    icon: FaYoutube,
     label: 'YouTube',
     href: 'https://youtube.com/@scriptinkofficial?si=B-0YLH5Jqz9UkKPA',
   },
   {
-    icon: ExternalLink,
+    icon: FaLinkedin,
     label: 'LinkedIn',
     href: 'https://www.linkedin.com/company/scriptink-official/',
   },
@@ -35,6 +35,7 @@ export default function Footer() {
                 alt="ScriptInk logo"
                 className="h-10 w-10 object-contain"
               />
+
               <span
                 className="text-2xl text-[#F6EBDD]"
                 style={{ fontFamily: "'Dancing Script', cursive" }}
