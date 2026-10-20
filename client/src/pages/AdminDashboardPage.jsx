@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const ne = {
+const EVENT_META = {
   writing: { icon: PenLine, label: 'Writing', color: '#873747' },
   'pop-up-quiz': { icon: Zap, label: 'Pop-Up Quiz', color: '#C69A69' },
   'open-mic': { icon: Mic, label: 'Open Mic', color: '#873747' },
