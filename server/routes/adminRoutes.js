@@ -256,48 +256,44 @@ router.get("/registrations", requireAdmin, async (req, res) => {
 
       Registration.countDocuments(),
 
+      // Count each selected event exactly once per registration.
+      // Use the events array when present; fall back to the
+      // comma-separated event field for older records.
       Registration.aggregate([
         {
           $project: {
             selectedEvents: {
-              $setUnion: [
-                { $ifNull: ["$events", []] },
+              $cond: [
+                { $gt: [{ $size: { $ifNull: ["$events", []] } }, 0] },
+                "$events",
                 {
-                  $cond: [
-                    {
-                      $gt: [
-                        {
-                          $strLenCP: {
-                            $ifNull: ["$event", ""],
-                          },
-                        },
-                        0,
-                      ],
-                    },
-                    {
-                      $split: [
-                        { $ifNull: ["$event", ""] },
-                        ",",
-                      ],
-                    },
-                    [],
+                  $split: [
+                    { $ifNull: ["$event", ""] },
+                    ",",
                   ],
                 },
               ],
             },
           },
         },
-        { $unwind: "$selectedEvents" },
+        {
+          $unwind: "$selectedEvents",
+        },
         {
           $project: {
-            event: {
+            eventName: {
               $trim: { input: "$selectedEvents" },
             },
           },
         },
         {
+          $match: {
+            eventName: { $in: VALID_EVENTS },
+          },
+        },
+        {
           $group: {
-            _id: "$event",
+            _id: "$eventName",
             count: { $sum: 1 },
           },
         },
