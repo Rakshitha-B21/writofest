@@ -13,7 +13,11 @@ import {
   ArrowRight,
   Feather,
   Copy,
+  MessageCircle,
 } from 'lucide-react';
+
+const WHATSAPP_GROUP_URL =
+  'https://chat.whatsapp.com/D4RYjecK6Pz2n8RLSU7BaA?s=sh&p=a&mlu=4&ilr=4';
 
 const EVENT_META = {
   writing: { icon: PenLine, label: 'Writing', color: '#873747' },
@@ -223,6 +227,16 @@ export default function SuccessPage() {
                   Please save your Registration ID and carry it on the
                   day of the event. We look forward to seeing you!
                 </p>
+
+                <a
+                  href={WHATSAPP_GROUP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center justify-center gap-2 rounded-sm bg-[#25D366] px-6 py-3 text-sm font-medium tracking-wide text-[#0D0B09] transition-colors hover:bg-[#1FBA59]"
+                >
+                  <MessageCircle size={17} />
+                  Join Writofest WhatsApp Group
+                </a>
 
                 {/* Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3">
