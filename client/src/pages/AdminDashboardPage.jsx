@@ -6,16 +6,34 @@ import {
   adminLogout,
 } from '../services/api';
 import {
-  LogOut, Download, Search, RefreshCw,
-  PenLine, Zap, Mic, BookOpen, ChevronLeft, ChevronRight,
+  LogOut,
+  Download,
+  Search,
+  RefreshCw,
+  PenLine,
+  Mic,
+  Brain,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const EVENT_META = {
-  writing: { icon: PenLine, label: 'Writing', color: '#873747' },
-  'pop-up-quiz': { icon: Zap, label: 'Pop-Up Quiz', color: '#C69A69' },
-  'open-mic': { icon: Mic, label: 'Open Mic', color: '#873747' },
-  storytelling: { icon: BookOpen, label: 'Storytelling', color: '#C69A69' },
+  'ink-your-script': {
+    icon: PenLine,
+    label: 'Ink Your Script',
+    color: '#873747',
+  },
+  'open-mic': {
+    icon: Mic,
+    label: 'Open Mic',
+    color: '#C69A69',
+  },
+  quiz: {
+    icon: Brain,
+    label: 'The Art of Knowing',
+    color: '#873747',
+  },
 };
 
 const PAGE_SIZE = 20;
@@ -25,7 +43,10 @@ export default function AdminDashboardPage() {
 
   const [registrations, setRegistrations] = useState([]);
   const [total, setTotal] = useState(0);
-  const [summaryStats, setSummaryStats] = useState({ total: 0, byEvent: {} });
+  const [summaryStats, setSummaryStats] = useState({
+    total: 0,
+    byEvent: {},
+  });
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [filterEvent, setFilterEvent] = useState('');
@@ -36,6 +57,8 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     let active = true;
 
+    setLoading(true);
+
     getAdminRegistrations({
       page,
       limit: PAGE_SIZE,
@@ -44,13 +67,22 @@ export default function AdminDashboardPage() {
     })
       .then((res) => {
         if (!active) return;
+
         const data = res.data?.data;
-        setRegistrations(Array.isArray(data?.registrations) ? data.registrations : []);
+        setRegistrations(
+          Array.isArray(data?.registrations)
+            ? data.registrations
+            : []
+        );
         setTotal(data?.total ?? 0);
-        setSummaryStats(data?.stats ?? { total: 0, byEvent: {} });
+        setSummaryStats(
+          data?.stats ?? { total: 0, byEvent: {} }
+        );
       })
       .catch(() => {
-        if (active) toast.error('Failed to load registrations.');
+        if (active) {
+          toast.error('Failed to load registrations.');
+        }
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -65,25 +97,33 @@ export default function AdminDashboardPage() {
     try {
       await adminLogout();
     } catch {
-      toast.error('Could not reach the server; your local session has ended.');
+      toast.error(
+        'Could not reach the server; your local session has ended.'
+      );
     }
+
     localStorage.removeItem('admin_token');
     navigate('/admin/login');
   };
 
   const handleExport = async () => {
     setExporting(true);
+
     try {
       const res = await exportRegistrations({
         search: search || undefined,
         event: filterEvent || undefined,
       });
+
       const url = URL.createObjectURL(res.data);
       const a = document.createElement('a');
       a.href = url;
       a.download = `writofest-registrations-${Date.now()}.csv`;
+      document.body.appendChild(a);
       a.click();
+      a.remove();
       URL.revokeObjectURL(url);
+
       toast.success('Export downloaded!');
     } catch {
       toast.error('Export failed.');
@@ -94,46 +134,49 @@ export default function AdminDashboardPage() {
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  const eventStats = Object.entries(EVENT_META).map(([slug, meta]) => ({
-    slug,
-    ...meta,
-    count: summaryStats.byEvent?.[slug] || 0,
-  }));
+  const eventStats = Object.entries(EVENT_META).map(
+    ([slug, meta]) => ({
+      slug,
+      ...meta,
+      count: summaryStats.byEvent?.[slug] || 0,
+    })
+  );
 
   return (
     <main className="min-h-screen bg-[#0D0B09]">
-      {/* Top bar */}
-      <header className="bg-[#101010] border-b border-[rgba(198,154,105,0.15)] sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-40 border-b border-[rgba(198,154,105,0.15)] bg-[#101010]">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
             <img
               src="/scriptink-logo.jpeg"
               alt="ScriptInk logo"
               className="h-10 w-10 object-contain"
-              />
+            />
             <span
               className="text-xl text-[#F6EBDD]"
               style={{ fontFamily: "'Dancing Script', cursive" }}
             >
               ScriptInk
             </span>
-            <span className="text-[#F6EBDD]/20 text-sm mx-1">/</span>
-            <span className="text-[#C69A69] text-xs tracking-widest uppercase font-medium">
+            <span className="mx-1 text-sm text-[#F6EBDD]/20">/</span>
+            <span className="text-xs font-medium uppercase tracking-widest text-[#C69A69]">
               Admin Dashboard
             </span>
           </div>
+
           <div className="flex items-center gap-3">
             <button
               onClick={handleExport}
               disabled={exporting}
-              className="hidden sm:flex items-center gap-2 px-4 py-2 border border-[rgba(198,154,105,0.3)] text-[#C69A69] hover:bg-[rgba(198,154,105,0.08)] text-xs tracking-widest uppercase rounded-sm transition-all duration-200 disabled:opacity-50"
+              className="hidden items-center gap-2 rounded-sm border border-[rgba(198,154,105,0.3)] px-4 py-2 text-xs uppercase tracking-widest text-[#C69A69] transition-all duration-200 hover:bg-[rgba(198,154,105,0.08)] disabled:opacity-50 sm:flex"
             >
               <Download size={13} />
               {exporting ? 'Exporting…' : 'Export CSV'}
             </button>
+
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 border border-[rgba(135,55,71,0.3)] text-[#873747] hover:bg-[rgba(135,55,71,0.1)] text-xs tracking-widest uppercase rounded-sm transition-all duration-200"
+              className="flex items-center gap-2 rounded-sm border border-[rgba(135,55,71,0.3)] px-4 py-2 text-xs uppercase tracking-widest text-[#873747] transition-all duration-200 hover:bg-[rgba(135,55,71,0.1)]"
             >
               <LogOut size={13} />
               Logout
@@ -142,39 +185,50 @@ export default function AdminDashboardPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {eventStats.map(({ slug, icon: Icon, label, color, count }) => (
-            <div
-              key={slug}
-              className="bg-[#1A1512] border border-[rgba(198,154,105,0.1)] rounded-sm p-4 space-y-2"
-            >
-              <div className="flex items-center justify-between">
-                <Icon size={16} style={{ color }} strokeWidth={1.5} />
-                <span
-                  className="text-2xl font-bold"
-                  style={{ fontFamily: "'Playfair Display', serif", color }}
-                >
-                  {count}
-                </span>
+      <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6">
+        {/* Event statistics */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {eventStats.map(
+            ({ slug, icon: Icon, label, color, count }) => (
+              <div
+                key={slug}
+                className="space-y-2 rounded-sm border border-[rgba(198,154,105,0.1)] bg-[#1A1512] p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <Icon
+                    size={16}
+                    style={{ color }}
+                    strokeWidth={1.5}
+                  />
+                  <span
+                    className="text-2xl font-bold"
+                    style={{
+                      fontFamily: "'Playfair Display', serif",
+                      color,
+                    }}
+                  >
+                    {count}
+                  </span>
+                </div>
+                <p className="text-xs tracking-wide text-[#F6EBDD]/50">
+                  {label}
+                </p>
               </div>
-              <p className="text-[#F6EBDD]/50 text-xs tracking-wide">{label}</p>
-            </div>
-          ))}
+            )
+          )}
         </div>
 
-        {/* Total summary */}
+        {/* Total registrations */}
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-gradient-to-r from-[rgba(198,154,105,0.15)] to-transparent" />
-          <span className="text-[#C69A69] text-xs tracking-widest uppercase">
+          <span className="text-xs uppercase tracking-widest text-[#C69A69]">
             {summaryStats.total} Total Registrations
           </span>
           <div className="h-px flex-1 bg-gradient-to-l from-[rgba(198,154,105,0.15)] to-transparent" />
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        {/* Search and filters */}
+        <div className="flex flex-col gap-4 sm:flex-row">
           <div className="relative flex-1">
             <Search
               size={14}
@@ -189,9 +243,10 @@ export default function AdminDashboardPage() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full bg-[#1A1512] border border-[rgba(198,154,105,0.15)] rounded-sm pl-9 pr-4 py-2.5 text-[#F6EBDD] placeholder-[#F6EBDD]/25 text-sm outline-none focus:border-[#C69A69] transition-colors"
+              className="w-full rounded-sm border border-[rgba(198,154,105,0.15)] bg-[#1A1512] py-2.5 pl-9 pr-4 text-sm text-[#F6EBDD] outline-none transition-colors placeholder:text-[#F6EBDD]/25 focus:border-[#C69A69]"
             />
           </div>
+
           <select
             value={filterEvent}
             onChange={(e) => {
@@ -199,7 +254,7 @@ export default function AdminDashboardPage() {
               setFilterEvent(e.target.value);
               setPage(1);
             }}
-            className="bg-[#1A1512] border border-[rgba(198,154,105,0.15)] rounded-sm px-4 py-2.5 text-[#F6EBDD]/80 text-sm outline-none focus:border-[#C69A69] transition-colors"
+            className="rounded-sm border border-[rgba(198,154,105,0.15)] bg-[#1A1512] px-4 py-2.5 text-sm text-[#F6EBDD]/80 outline-none transition-colors focus:border-[#C69A69]"
           >
             <option value="">All Events</option>
             {Object.entries(EVENT_META).map(([slug, { label }]) => (
@@ -208,20 +263,24 @@ export default function AdminDashboardPage() {
               </option>
             ))}
           </select>
+
           <button
             onClick={() => {
               setLoading(true);
               setRefreshKey((key) => key + 1);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 border border-[rgba(198,154,105,0.2)] text-[#F6EBDD]/60 hover:text-[#C69A69] hover:border-[rgba(198,154,105,0.4)] text-sm rounded-sm transition-all duration-200"
+            className="flex items-center gap-2 rounded-sm border border-[rgba(198,154,105,0.2)] px-4 py-2.5 text-sm text-[#F6EBDD]/60 transition-all duration-200 hover:border-[rgba(198,154,105,0.4)] hover:text-[#C69A69]"
           >
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            <RefreshCw
+              size={14}
+              className={loading ? 'animate-spin' : ''}
+            />
             Refresh
           </button>
         </div>
 
-        {/* Table */}
-        <div className="bg-[#1A1512] border border-[rgba(198,154,105,0.1)] rounded-sm overflow-hidden">
+        {/* Registrations table */}
+        <div className="overflow-hidden rounded-sm border border-[rgba(198,154,105,0.1)] bg-[#1A1512]">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -237,88 +296,101 @@ export default function AdminDashboardPage() {
                     'Year',
                     'Event',
                     'Date',
-                  ].map(
-                    (h) => (
-                      <th
-                        key={h}
-                        className="text-left text-xs text-[#C69A69] tracking-widest uppercase font-medium px-4 py-3"
-                      >
-                        {h}
-                      </th>
-                    )
-                  )}
+                  ].map((heading) => (
+                    <th
+                      key={heading}
+                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-widest text-[#C69A69]"
+                    >
+                      {heading}
+                    </th>
+                  ))}
                 </tr>
               </thead>
+
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan={10} className="text-center py-12">
+                    <td colSpan={10} className="py-12 text-center">
                       <div className="flex items-center justify-center gap-3">
-                        <div className="w-5 h-5 border-2 border-[#C69A69] border-t-transparent rounded-full animate-spin" />
-                        <span className="text-[#F6EBDD]/40 text-xs">Loading…</span>
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#C69A69] border-t-transparent" />
+                        <span className="text-xs text-[#F6EBDD]/40">
+                          Loading…
+                        </span>
                       </div>
                     </td>
                   </tr>
                 )}
+
                 {!loading && registrations.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="text-center py-12">
-                      <p className="text-[#F6EBDD]/30 text-sm">No registrations found.</p>
+                    <td colSpan={10} className="py-12 text-center">
+                      <p className="text-sm text-[#F6EBDD]/30">
+                        No registrations found.
+                      </p>
                     </td>
                   </tr>
                 )}
+
                 {!loading &&
                   registrations.map((reg, idx) => {
                     const meta = EVENT_META[reg.event];
                     const Icon = meta?.icon;
+
                     return (
                       <tr
                         key={reg._id || reg.id || idx}
-                        className="border-b border-[rgba(198,154,105,0.05)] hover:bg-[rgba(198,154,105,0.03)] transition-colors"
+                        className="border-b border-[rgba(198,154,105,0.05)] transition-colors hover:bg-[rgba(198,154,105,0.03)]"
                       >
-                        <td className="px-4 py-3 text-[#F6EBDD]/30 text-xs font-mono">
+                        <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-[#F6EBDD]/30">
                           {(page - 1) * PAGE_SIZE + idx + 1}
                         </td>
-                        <td className="px-4 py-3 text-[#C69A69] text-xs font-mono whitespace-nowrap">
+                        <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-[#C69A69]">
                           {reg.registrationId}
                         </td>
-                        <td className="px-4 py-3 text-[#F6EBDD] font-medium whitespace-nowrap">
+                        <td className="whitespace-nowrap px-4 py-3 font-medium text-[#F6EBDD]">
                           {reg.name}
                         </td>
-                        <td className="px-4 py-3 text-[#F6EBDD]/60 text-xs font-mono whitespace-nowrap">
+                        <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-[#F6EBDD]/60">
                           {reg.usn}
                         </td>
-                        <td className="px-4 py-3 text-[#F6EBDD]/60 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-4 py-3 text-[#F6EBDD]/60">
                           {reg.email}
                         </td>
-                        <td className="px-4 py-3 text-[#F6EBDD]/60 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-4 py-3 text-[#F6EBDD]/60">
                           {reg.phone}
                         </td>
-                        <td className="px-4 py-3 text-[#F6EBDD]/60 max-w-[180px] truncate">
+                        <td className="max-w-[180px] truncate px-4 py-3 text-[#F6EBDD]/60">
                           {reg.institution}
                         </td>
-                        <td className="px-4 py-3 text-[#F6EBDD]/60 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-4 py-3 text-[#F6EBDD]/60">
                           {reg.year}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-4 py-3">
                           <span
-                            className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-sm"
+                            className="inline-flex items-center gap-1.5 rounded-sm px-2 py-1 text-xs font-medium"
                             style={{
                               color: meta?.color || '#F6EBDD',
-                              background: `rgba(${meta?.color === '#873747' ? '135,55,71' : '198,154,105'},0.12)`,
+                              background: meta
+                                ? meta.color === '#873747'
+                                  ? 'rgba(135,55,71,0.12)'
+                                  : 'rgba(198,154,105,0.12)'
+                                : 'rgba(246,235,221,0.08)',
                             }}
                           >
                             {Icon && <Icon size={11} strokeWidth={2} />}
-                            {meta?.label || reg.event}
+                            {meta?.label || reg.event || '—'}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-[#F6EBDD]/40 text-xs whitespace-nowrap">
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-[#F6EBDD]/40">
                           {reg.createdAt
-                            ? new Date(reg.createdAt).toLocaleDateString('en-IN', {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric',
-                              })
+                            ? new Date(reg.createdAt).toLocaleDateString(
+                                'en-IN',
+                                {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                }
+                              )
                             : '—'}
                         </td>
                       </tr>
@@ -329,32 +401,32 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Pagination */}
-          <div className="px-4 py-3 border-t border-[rgba(198,154,105,0.1)] text-[#F6EBDD]/40 text-xs">
-            {total} matching registration{total === 1 ? '' : 's'}
+          <div className="border-t border-[rgba(198,154,105,0.1)] px-4 py-3 text-xs text-[#F6EBDD]/40">
+            {total} matching registration
+            {total === 1 ? '' : 's'}
           </div>
+
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-[rgba(198,154,105,0.1)]">
-              <span className="text-[#F6EBDD]/30 text-xs">
+            <div className="flex items-center justify-between border-t border-[rgba(198,154,105,0.1)] px-4 py-3">
+              <span className="text-xs text-[#F6EBDD]/30">
                 Page {page} of {totalPages}
               </span>
+
               <div className="flex gap-2">
                 <button
-                  onClick={() => {
-                    setLoading(true);
-                    setPage((p) => Math.max(1, p - 1));
-                  }}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="p-1.5 rounded-sm border border-[rgba(198,154,105,0.2)] text-[#F6EBDD]/50 hover:text-[#C69A69] hover:border-[rgba(198,154,105,0.4)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  className="rounded-sm border border-[rgba(198,154,105,0.2)] p-1.5 text-[#F6EBDD]/50 transition-all hover:border-[rgba(198,154,105,0.4)] hover:text-[#C69A69] disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   <ChevronLeft size={14} />
                 </button>
+
                 <button
-                  onClick={() => {
-                    setLoading(true);
-                    setPage((p) => Math.min(totalPages, p + 1));
-                  }}
+                  onClick={() =>
+                    setPage((p) => Math.min(totalPages, p + 1))
+                  }
                   disabled={page === totalPages}
-                  className="p-1.5 rounded-sm border border-[rgba(198,154,105,0.2)] text-[#F6EBDD]/50 hover:text-[#C69A69] hover:border-[rgba(198,154,105,0.4)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  className="rounded-sm border border-[rgba(198,154,105,0.2)] p-1.5 text-[#F6EBDD]/50 transition-all hover:border-[rgba(198,154,105,0.4)] hover:text-[#C69A69] disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   <ChevronRight size={14} />
                 </button>
