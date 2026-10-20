@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -18,8 +19,9 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+// IMPORTANT: These keys must match the backend event slugs.
 const EVENT_META = {
-  'ink-your-script': {
+  writing: {
     icon: PenLine,
     label: 'Ink Your Script',
     color: '#873747',
@@ -69,11 +71,13 @@ export default function AdminDashboardPage() {
         if (!active) return;
 
         const data = res.data?.data;
+
         setRegistrations(
           Array.isArray(data?.registrations)
             ? data.registrations
             : []
         );
+
         setTotal(data?.total ?? 0);
         setSummaryStats(
           data?.stats ?? { total: 0, byEvent: {} }
@@ -117,8 +121,10 @@ export default function AdminDashboardPage() {
 
       const url = URL.createObjectURL(res.data);
       const a = document.createElement('a');
+
       a.href = url;
       a.download = `writofest-registrations-${Date.now()}.csv`;
+
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -132,15 +138,36 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(total / PAGE_SIZE)
+  );
 
   const eventStats = Object.entries(EVENT_META).map(
     ([slug, meta]) => ({
       slug,
       ...meta,
-      count: summaryStats.byEvent?.[slug] || 0,
+      count: Number(summaryStats.byEvent?.[slug] ?? 0),
     })
   );
+
+  // Supports both the current events array and older records
+  // that store selected events as a comma-separated string.
+  const getRegistrationEvents = (reg) => {
+    const selectedEvents = Array.isArray(reg.events)
+      ? reg.events
+      : typeof reg.event === 'string'
+        ? reg.event.split(',')
+        : [];
+
+    return [
+      ...new Set(
+        selectedEvents
+          .map((event) => String(event).trim())
+          .filter(Boolean)
+      ),
+    ];
+  };
 
   return (
     <main className="min-h-screen bg-[#0D0B09]">
@@ -152,13 +179,18 @@ export default function AdminDashboardPage() {
               alt="ScriptInk logo"
               className="h-10 w-10 object-contain"
             />
+
             <span
               className="text-xl text-[#F6EBDD]"
               style={{ fontFamily: "'Dancing Script', cursive" }}
             >
               ScriptInk
             </span>
-            <span className="mx-1 text-sm text-[#F6EBDD]/20">/</span>
+
+            <span className="mx-1 text-sm text-[#F6EBDD]/20">
+              /
+            </span>
+
             <span className="text-xs font-medium uppercase tracking-widest text-[#C69A69]">
               Admin Dashboard
             </span>
@@ -200,6 +232,7 @@ export default function AdminDashboardPage() {
                     style={{ color }}
                     strokeWidth={1.5}
                   />
+
                   <span
                     className="text-2xl font-bold"
                     style={{
@@ -210,6 +243,7 @@ export default function AdminDashboardPage() {
                     {count}
                   </span>
                 </div>
+
                 <p className="text-xs tracking-wide text-[#F6EBDD]/50">
                   {label}
                 </p>
@@ -221,9 +255,11 @@ export default function AdminDashboardPage() {
         {/* Total registrations */}
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-gradient-to-r from-[rgba(198,154,105,0.15)] to-transparent" />
+
           <span className="text-xs uppercase tracking-widest text-[#C69A69]">
             {summaryStats.total} Total Registrations
           </span>
+
           <div className="h-px flex-1 bg-gradient-to-l from-[rgba(198,154,105,0.15)] to-transparent" />
         </div>
 
@@ -234,6 +270,7 @@ export default function AdminDashboardPage() {
               size={14}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-[#F6EBDD]/30"
             />
+
             <input
               type="search"
               placeholder="Search by student name, USN, or registration ID…"
@@ -257,11 +294,14 @@ export default function AdminDashboardPage() {
             className="rounded-sm border border-[rgba(198,154,105,0.15)] bg-[#1A1512] px-4 py-2.5 text-sm text-[#F6EBDD]/80 outline-none transition-colors focus:border-[#C69A69]"
           >
             <option value="">All Events</option>
-            {Object.entries(EVENT_META).map(([slug, { label }]) => (
-              <option key={slug} value={slug}>
-                {label}
-              </option>
-            ))}
+
+            {Object.entries(EVENT_META).map(
+              ([slug, { label }]) => (
+                <option key={slug} value={slug}>
+                  {label}
+                </option>
+              )
+            )}
           </select>
 
           <button
@@ -313,6 +353,7 @@ export default function AdminDashboardPage() {
                     <td colSpan={10} className="py-12 text-center">
                       <div className="flex items-center justify-center gap-3">
                         <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#C69A69] border-t-transparent" />
+
                         <span className="text-xs text-[#F6EBDD]/40">
                           Loading…
                         </span>
@@ -333,8 +374,7 @@ export default function AdminDashboardPage() {
 
                 {!loading &&
                   registrations.map((reg, idx) => {
-                    const meta = EVENT_META[reg.event];
-                    const Icon = meta?.icon;
+                    const selectedEvents = getRegistrationEvents(reg);
 
                     return (
                       <tr
@@ -344,43 +384,76 @@ export default function AdminDashboardPage() {
                         <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-[#F6EBDD]/30">
                           {(page - 1) * PAGE_SIZE + idx + 1}
                         </td>
+
                         <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-[#C69A69]">
                           {reg.registrationId}
                         </td>
+
                         <td className="whitespace-nowrap px-4 py-3 font-medium text-[#F6EBDD]">
                           {reg.name}
                         </td>
+
                         <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-[#F6EBDD]/60">
                           {reg.usn}
                         </td>
+
                         <td className="whitespace-nowrap px-4 py-3 text-[#F6EBDD]/60">
                           {reg.email}
                         </td>
+
                         <td className="whitespace-nowrap px-4 py-3 text-[#F6EBDD]/60">
                           {reg.phone}
                         </td>
+
                         <td className="max-w-[180px] truncate px-4 py-3 text-[#F6EBDD]/60">
                           {reg.institution}
                         </td>
+
                         <td className="whitespace-nowrap px-4 py-3 text-[#F6EBDD]/60">
                           {reg.year}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3">
-                          <span
-                            className="inline-flex items-center gap-1.5 rounded-sm px-2 py-1 text-xs font-medium"
-                            style={{
-                              color: meta?.color || '#F6EBDD',
-                              background: meta
-                                ? meta.color === '#873747'
-                                  ? 'rgba(135,55,71,0.12)'
-                                  : 'rgba(198,154,105,0.12)'
-                                : 'rgba(246,235,221,0.08)',
-                            }}
-                          >
-                            {Icon && <Icon size={11} strokeWidth={2} />}
-                            {meta?.label || reg.event || '—'}
-                          </span>
+
+                        <td className="px-4 py-3">
+                          <div className="flex min-w-max flex-wrap gap-1.5">
+                            {selectedEvents.length > 0 ? (
+                              selectedEvents.map((event) => {
+                                const meta = EVENT_META[event];
+                                const Icon = meta?.icon;
+                                const color = meta?.color || '#F6EBDD';
+
+                                return (
+                                  <span
+                                    key={event}
+                                    className="inline-flex items-center gap-1.5 rounded-sm px-2 py-1 text-xs font-medium"
+                                    style={{
+                                      color,
+                                      background:
+                                        color === '#873747'
+                                          ? 'rgba(135,55,71,0.12)'
+                                          : color === '#C69A69'
+                                            ? 'rgba(198,154,105,0.12)'
+                                            : 'rgba(246,235,221,0.08)',
+                                    }}
+                                  >
+                                    {Icon && (
+                                      <Icon
+                                        size={11}
+                                        strokeWidth={2}
+                                      />
+                                    )}
+
+                                    {meta?.label || event}
+                                  </span>
+                                );
+                              })
+                            ) : (
+                              <span className="text-[#F6EBDD]/40">
+                                —
+                              </span>
+                            )}
+                          </div>
                         </td>
+
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-[#F6EBDD]/40">
                           {reg.createdAt
                             ? new Date(reg.createdAt).toLocaleDateString(
